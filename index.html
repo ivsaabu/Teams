@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Zazzau '26 — Find Your Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --deep:#0c0f45; --navy:#1a1f6e; --teal:#00c4b4; --teal2:#00e5d3;
+  --qa:#b91c2e; --qa-bg:#fff0f2; --qa-mid:#f9d0d6;
+  --sd:#166534; --sd-bg:#f0faf4; --sd-mid:#bbf7d0;
+  --rb:#1e40af; --rb-bg:#eff6ff; --rb-mid:#bfdbfe;
+  --bm:#1c1c1c; --bm-bg:#f5f5f5; --bm-mid:#d4d4d4;
+  --ink:#0c0f1e; --ink2:#3a3d52; --ink3:#7a7d96;
+  --border:#e2e4f0; --white:#fff; --surface:#f8f9ff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ── HERO ── */
+.hero{
+  background:var(--deep);
+  padding:56px 24px 72px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'ZAZZAU';
+  position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);
+  font-family:'Playfair Display',serif;font-size:clamp(100px,20vw,260px);
+  font-weight:900;color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,.04);
+  white-space:nowrap;pointer-events:none;letter-spacing:-4px;
+}
+.hero-inner{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.hero-logo{
+  display:inline-flex;align-items:center;gap:10px;
+  margin-bottom:40px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:30px;padding:8px 18px 8px 8px;
+}
+.hero-logo-dot{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--teal);
+  display:grid;place-items:center;
+  font-size:14px;font-weight:700;color:var(--deep);
+  font-family:'Playfair Display',serif;
+}
+.hero-logo-text{font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.3px;}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(38px,8vw,72px);
+  font-weight:900;color:#fff;
+  line-height:1;letter-spacing:-2px;
+  margin-bottom:14px;
+}
+.hero-title em{font-style:italic;color:var(--teal);}
+.hero-sub{
+  font-size:15px;color:rgba(255,255,255,.45);
+  line-height:1.8;font-weight:300;
+  max-width:380px;margin:0 auto;
+}
+
+/* team bar */
+.team-bar{display:flex;height:4px;}
+.team-bar span{flex:1;}
+.tb-qa{background:var(--qa);}
+.tb-sd{background:var(--sd);}
+.tb-rb{background:var(--rb);}
+.tb-bm{background:var(--bm);}
+
+/* ── SEARCH ── */
+.search-wrap{
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  padding:28px 24px;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 4px 32px rgba(12,15,69,.07);
+}
+.search-inner{max-width:580px;margin:0 auto;position:relative;}
+.search-box{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:14px;padding:12px 18px;
+  transition:border-color .18s,box-shadow .18s;
+}
+.search-box:focus-within{border-color:var(--navy);box-shadow:0 0 0 4px rgba(26,31,110,.07);}
+.search-icon-svg{color:var(--ink3);flex-shrink:0;width:18px;height:18px;}
+.search-input{
+  flex:1;border:none;background:transparent;
+  font-family:'Playfair Display',serif;font-size:19px;
+  color:var(--ink);outline:none;letter-spacing:-.3px;
+}
+.search-input::placeholder{color:#b0b3c8;font-style:italic;}
+.search-hint{font-size:11px;color:#b0b3c8;margin-top:8px;text-align:center;}
+
+/* dropdown */
+.sug-drop{
+  position:absolute;top:calc(100% + 10px);left:0;right:0;
+  background:var(--white);border:1.5px solid var(--border);
+  border-radius:16px;overflow:hidden;z-index:200;
+  box-shadow:0 24px 64px rgba(12,15,69,.14);
+  display:none;
+}
+.sug-item{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 18px;cursor:pointer;
+  border-bottom:1px solid #f0f2f8;
+  transition:background .12s;
+}
+.sug-item:last-child{border-bottom:none;}
+.sug-item:hover,.sug-item.hi{background:var(--surface);}
+.sug-av{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;
+  font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#fff;
+}
+.sug-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--ink);}
+.sug-meta{font-size:11px;color:var(--ink3);margin-top:1px;}
+.sug-badge{
+  margin-left:auto;font-size:9px;font-weight:700;
+  letter-spacing:.5px;padding:3px 10px;border-radius:20px;
+  color:#fff;flex-shrink:0;
+}
+.no-sug{padding:28px;text-align:center;color:var(--ink3);font-family:'Playfair Display',serif;font-size:16px;font-style:italic;}
+
+/* ── MAIN ── */
+main{max-width:860px;margin:0 auto;padding:48px 20px 96px;}
+
+/* ── TEAM BROWSE ── */
+.browse-title{
+  font-family:'Playfair Display',serif;font-size:22px;font-weight:700;
+  color:var(--ink);margin-bottom:24px;
+}
+.team-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;margin-bottom:56px;
+}
+@media(min-width:520px){.team-grid{grid-template-columns:repeat(4,1fr);}}
+
+.tcard{
+  border-radius:18px;overflow:hidden;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--white);
+  transition:transform .22s,box-shadow .22s,border-color .22s;
+}
+.tcard:hover{transform:translateY(-5px);box-shadow:0 16px 48px rgba(12,15,69,.12);border-color:transparent;}
+.tcard-top{
+  height:90px;display:flex;align-items:center;justify-content:center;
+  font-size:32px;position:relative;overflow:hidden;
+}
+.tcard-pattern{
+  position:absolute;inset:0;opacity:.08;
+  background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 1px,transparent 10px),
+  repeating-linear-gradient(-45deg,#fff 0,#fff 1px,transparent 1px,transparent 10px);
+}
+.tcard-emoji{position:relative;z-index:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+.tcard-body{padding:14px 16px 16px;}
+.tcard-name{
+  font-family:'Playfair Display',serif;font-size:16px;font-weight:700;
+  color:var(--ink);margin-bottom:2px;
+}
+.tcard-count{font-size:11px;color:var(--ink3);}
+.tcard-pip{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+/* ── RESULT ── */
+.result-card{
+  border-radius:20px;overflow:hidden;
+  border:1.5px solid var(--border);
+  box-shadow:0 8px 48px rgba(12,15,69,.1);
+  background:var(--white);
+  animation:cardIn .35s cubic-bezier(.16,1,.3,1);
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+
+/* identity band */
+.id-band{padding:44px 40px 36px;position:relative;overflow:hidden;}
+.id-band-top{position:absolute;top:0;left:0;right:0;height:5px;}
+.id-band-glow{
+  position:absolute;top:-80px;right:-80px;
+  width:300px;height:300px;border-radius:50%;opacity:.07;
+}
+.id-content{position:relative;z-index:1;}
+.id-eyebrow{
+  font-size:11px;color:var(--ink3);letter-spacing:.3px;
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.id-eyebrow::before{content:'';width:18px;height:1px;background:currentColor;display:inline-block;}
+.id-name{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(28px,5.5vw,50px);font-weight:900;
+  color:var(--ink);line-height:1;letter-spacing:-1px;margin-bottom:5px;
+}
+.id-nick{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:17px;color:var(--ink3);margin-bottom:22px;
+}
+.id-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.id-chip{
+  padding:5px 13px;border-radius:20px;font-size:11.5px;font-weight:500;
+  background:rgba(0,0,0,.05);color:var(--ink2);
+}
+.id-chip.exec{color:#fff;border:none;}
+
+/* team reveal */
+.team-reveal{
+  border-top:1.5px solid var(--border);
+  padding:28px 40px 32px;
+  display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+}
+.tr-sub{font-size:11px;color:var(--ink3);margin-bottom:6px;letter-spacing:.3px;}
+.tr-name{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(24px,4vw,38px);font-weight:900;
+  line-height:1;letter-spacing:-1px;margin-bottom:6px;
+}
+.tr-desc{font-size:13px;color:var(--ink3);line-height:1.65;max-width:300px;}
+.tr-stats{display:flex;gap:0;flex-shrink:0;}
+.tr-stat{text-align:center;padding:0 18px;border-left:1px solid var(--border);}
+.tr-stat:first-child{border-left:none;padding-left:0;}
+.tr-stat-num{
+  font-family:'Playfair Display',serif;font-size:28px;font-weight:900;
+  display:block;line-height:1;
+}
+.tr-stat-lbl{font-size:10px;color:var(--ink3);margin-top:3px;display:block;}
+
+/* roster */
+.roster{padding:0 40px 40px;}
+.roster-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 0 16px;
+  border-top:1.5px solid var(--border);
+  margin-bottom:4px;
+}
+.roster-title{font-weight:700;font-size:14px;color:var(--ink);}
+.roster-count{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink3);}
+.roster-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+@media(max-width:480px){.roster-grid{grid-template-columns:1fr;}}
+
+.ritem{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 14px;border-radius:12px;
+  border:1.5px solid transparent;
+  transition:background .12s;
+}
+.ritem:hover{background:var(--surface);}
+.ritem.you{border-color:currentColor;}
+.rav{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;
+  font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#fff;
+}
+.rname{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.3;}
+.rnick{font-size:10.5px;color:var(--ink3);}
+.you-tag{
+  margin-left:auto;font-size:9px;font-weight:700;
+  padding:2px 8px;border-radius:10px;color:#fff;flex-shrink:0;
+}
+.exec-star{margin-left:auto;font-size:12px;flex-shrink:0;}
+
+.back-row{margin-top:20px;text-align:center;}
+.back-btn{
+  background:none;border:1.5px solid var(--border);
+  color:var(--ink3);padding:9px 22px;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.back-btn:hover{border-color:var(--ink);color:var(--ink);}
+
+/* color utils */
+.bg-qa{background:var(--qa);}
+.bg-sd{background:var(--sd);}
+.bg-rb{background:var(--rb);}
+.bg-bm{background:var(--bm);}
+.light-qa{background:var(--qa-bg);}
+.light-sd{background:var(--sd-bg);}
+.light-rb{background:var(--rb-bg);}
+.light-bm{background:var(--bm-bg);}
+.color-qa{color:var(--qa);}
+.color-sd{color:var(--sd);}
+.color-rb{color:var(--rb);}
+.color-bm{color:var(--bm);}
+.border-qa{border-color:var(--qa)!important;}
+.border-sd{border-color:var(--sd)!important;}
+.border-rb{border-color:var(--rb)!important;}
+.border-bm{border-color:var(--bm)!important;}
+
+/* footer */
+footer{
+  text-align:center;padding:28px;
+  font-size:12px;color:var(--ink3);
+  border-top:1px solid var(--border);
+}
+
+@media(max-width:600px){
+  .id-band{padding:32px 22px 28px;}
+  .team-reveal{padding:22px;grid-template-columns:1fr;}
+  .tr-stats{justify-content:flex-start;}
+  .roster{padding:0 22px 28px;}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-logo">
+      <div class="hero-logo-dot">Z</div>
+      <span class="hero-logo-text">IVSA Nigeria · Zazzau '26</span>
+    </div>
+    <h1 class="hero-title">Find your<br/><em>team.</em></h1>
+    <p class="hero-sub">Search your name to discover which Congress team you belong to, meet your teammates, and see who's carrying the flag with you at ABU Zaria.</p>
+  </div>
+</div>
+<div class="team-bar"><span class="tb-qa"></span><span class="tb-sd"></span><span class="tb-rb"></span><span class="tb-bm"></span></div>
+
+<div class="search-wrap">
+  <div class="search-inner">
+    <div class="search-box">
+      <svg class="search-icon-svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="8.5" cy="8.5" r="5.5"/><path d="M15 15l-3-3"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="Your name or nickname…"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="handleSearch(this.value)" onkeydown="handleKey(event)"/>
+    </div>
+    <div class="sug-drop" id="sugDrop"></div>
+    <div class="search-hint">91 delegates · 4 teams · Oct 13–18, ABU Zaria</div>
+  </div>
+</div>
+
+<main>
+  <div id="stateIdle">
+    <div class="browse-title">Browse by team</div>
+    <div class="team-grid" id="teamGrid"></div>
+  </div>
+  <div id="stateResult" style="display:none;"></div>
+</main>
+
+<footer>© 2026 IVSA Nigeria · Annual National Congress · Faculty of Veterinary Medicine, ABU Zaria</footer>
+
+<script>
+const GROUPS = {
+"Queen Amina":[
+  {id:38,name:"Adebanke Hephzibah Adepoju",nickname:"Theglobalbankss",university:"UNIJOS",year:"Year 4",gender:"Female",national_position:"National Junior Exchange Officer"},
+  {id:3,name:"Akachukwu Fortune Nwadinigwe",nickname:"Dr. Smart",university:"UNN",year:"Graduate",gender:"Male",national_position:"Alumni & BOT Member"},
+  {id:33,name:"KELVIN CHIBUIKEM FELIX",nickname:"KELVIN",university:"MOUAU",year:"Year 5",gender:"Male",national_position:"National Treasurer & Sponsorship Coordinator 2"},
+  {id:40,name:"Abubakar Adamu",nickname:"National Dada",university:"ABU",year:"Year 6",gender:"Male",national_position:"President"},
+  {id:62,name:"Destiny Ndi Akam",nickname:"Destiny Ndi",university:"ABU",year:"Year 6",gender:"Female",national_position:"Project Manager of Animal Welfare Club"},
+  {id:20,name:"Shamsiyah ABDULMUMINI",nickname:"Shamsiyah",university:"ABU",year:"Year 6",gender:"Female",national_position:"Member SCOW"},
+  {id:19,name:"Abdulrazaq Alhaji Alhassan",nickname:"Alhaji",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:81,name:"Itohan Nicole Okoro",nickname:"Nicole",university:"UNIBEN",year:"Graduate",gender:"Female",national_position:"None"},
+  {id:49,name:"FAUZIYA ABDULLAHI SULE",nickname:"G sule",university:"ABU",year:"Year 2",gender:"Female",national_position:"None"},
+  {id:60,name:"BELLO WUDILAWA BALARABE",nickname:"Lameedowudeelawa",university:"UNIMAID",year:"Year 2",gender:"Male",national_position:"None"},
+  {id:25,name:"Wasila Eboh Momoh",nickname:"Eboh",university:"ABU",year:"Year 4",gender:"Female",national_position:"None"},
+  {id:28,name:"Salma Ovayioza Abdulganiyu",nickname:"Chimpom",university:"ABU",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:35,name:"Theophilus Magani Dadi",nickname:"Sir Tee",university:"UNIMAID",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:73,name:"Victor Uka Stephen",nickname:"Victor Stephen",university:"UNIABUJA",year:"Year 1",gender:"Male",national_position:"None"},
+  {id:36,name:"Henry Nanmet Dyelsen",nickname:"Cee-Clear",university:"JOSTUM",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:57,name:"Chidiogo Sandra Duhu",nickname:"Sandra or Dr. Eyes",university:"UNN",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:9,name:"Abubakar Sayyadi Abubakar",nickname:"Sayyadi",university:"ABU",year:"Year 3",gender:"Male",national_position:"None"},
+  {id:21,name:"Atahiru Momoh Yahaya",nickname:"Atahiru",university:"ABU",year:"Year 3",gender:"Male",national_position:"None"},
+  {id:54,name:"Stephen Idemudia Godwin",nickname:"Odogwu",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:51,name:"Kenneth Eleojo Aloja",nickname:"Kennyscol",university:"UDUS",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:30,name:"Khawlah Koinsolami Olagunju",nickname:"Khawlah",university:"ABU",year:"Year 3",gender:"Female",national_position:"General Secretary WEAN"},
+  {id:56,name:"Nabeelah Jummai Yusuph",nickname:"Nabeelah",university:"ABU",year:"Year 4",gender:"Female",national_position:"None"},
+],
+"Sardauna":[
+  {id:64,name:"JEFFREY ORUME AWOWEDE",nickname:"Jeffdtechie",university:"UNIBEN",year:"Graduate",gender:"Male",national_position:"Chair, Standing Committee on One Health IVSA Nigeria"},
+  {id:61,name:"Mariam Oreoluwa Bello",nickname:"MBO",university:"UNILORIN",year:"Year 6",gender:"Female",national_position:"Project Manager, SCOVE IVSA Nigeria"},
+  {id:2,name:"Isaac Tonga Augustine",nickname:"Mario",university:"ABU",year:"Year 5",gender:"Male",national_position:"LOC Chairperson & IVSA Nigeria WEAN Project Manager 2"},
+  {id:77,name:"John Sina Philemon",nickname:"John Sina",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:43,name:"Fatima Tajudeen",nickname:"Teemah Taj",university:"UNIMAID",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:42,name:"Usamatu Bukkuyum Sani",nickname:"Longman",university:"ABU",year:"Year 5",gender:"Male",national_position:"None"},
+  {id:7,name:"ABDURRAHMAN SHIITU",nickname:"KAY",university:"ABU",year:"Year 3",gender:"Male",national_position:"None"},
+  {id:34,name:"Yusuf Rabiu Alkasim",nickname:"YUSUF",university:"ABU",year:"Year 1",gender:"Male",national_position:"None"},
+  {id:37,name:"Eunice Ugochinyere Ukaha",nickname:"Eunny",university:"MOUAU",year:"Year 2",gender:"Female",national_position:"None"},
+  {id:48,name:"Chidera Cosmas Onyedibe",nickname:"Dr. Cosmas",university:"MOUAU",year:"Graduate",gender:"Male",national_position:"None"},
+  {id:79,name:"Priscilla Kehinde Olaleru",nickname:"Priscilla",university:"UNIABUJA",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:8,name:"Fatima Gambo Aliyu",nickname:"Teemar",university:"ABU",year:"Year 6",gender:"Female",national_position:"None"},
+  {id:78,name:"Ireoluwa Favour Adegbenro",nickname:"BabyGiant",university:"UNIBADAN",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:18,name:"Zubairu Yusuf Adamude",nickname:"Adamude",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:10,name:"Muhammad Gbolagade Bello",nickname:"MUBELLAG",university:"ABU",year:"Year 3",gender:"Male",national_position:"None"},
+  {id:14,name:"Adamu Abdullahi UMAR",nickname:"C OF C",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:16,name:"Mukhtar Tahir Mustapha",nickname:"Muqtehr",university:"ABU",year:"Year 5",gender:"Male",national_position:"None"},
+  {id:32,name:"Maryam Musa Ahmed",nickname:"Mayah",university:"UDUS",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:31,name:"Andrea Dooter Uvah",nickname:"ANDIE",university:"JOSTUM",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:72,name:"Ruth Aduragbemi Emmanuel",nickname:"BaeRuiz",university:"UNIABUJA",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:63,name:"Zainab Opeyemi Maruff",nickname:"ScrubSavvy",university:"UNILORIN",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:89,name:"Abednego Joshua",nickname:"Josh",university:"UNIMAID",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:90,name:"Haruna Mohammed Umar",nickname:"Haruna",university:"ABU",year:"Year 4",gender:"Male",national_position:"None"},
+],
+"Ribadu":[
+  {id:53,name:"Oluwagbemiga Ojobaro",nickname:"Oluwagbemiga",university:"UNILORIN",year:"Year 6",gender:"Male",national_position:"Assistant Secretary General"},
+  {id:80,name:"Ogechi Favour George",nickname:"Georgie",university:"UNIBEN",year:"Graduate",gender:"Female",national_position:"SCAW Assistant Sec Gen"},
+  {id:68,name:"JEREMIAH DIO",nickname:"DIO",university:"UNIJOS",year:"Year 6",gender:"Male",national_position:"Assistant Secretary General 2"},
+  {id:71,name:"JONATHAN LEGBO",nickname:"Let's Grow Global",university:"UNIABUJA",year:"Year 5",gender:"Male",national_position:"General Secretary Editorial Board, IVSA Nigeria"},
+  {id:45,name:"Khadijah Bolanle AGBOOLA",nickname:"KayDeeJay",university:"ABU",year:"Year 4",gender:"Female",national_position:"Assistant Project Manager SCOVE NG"},
+  {id:58,name:"Maryam Hamman Ibrahim",nickname:"_maryam_hamman",university:"ABU",year:"Year 6",gender:"Female",national_position:"National Treasurer and Sponsorship Coordinator"},
+  {id:46,name:"Abdulazeez Oluwadamilola Iyiola",nickname:"Hayzed",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:12,name:"Naangoeni Lucy DALONG",nickname:"Lulu",university:"ABU",year:"Year 6",gender:"Female",national_position:"None"},
+  {id:6,name:"Deborah Aderinsola Ajayi",nickname:"Big debz",university:"ABU",year:"Year 6",gender:"Female",national_position:"None"},
+  {id:41,name:"MARYAM MA'ARUF",nickname:"Mummies' pet",university:"ABU",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:82,name:"Nissi Nmesomachi Ogbonna",nickname:"Saxifrage",university:"MOUAU",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:1,name:"Moshood Olamilekan Yahya",nickname:"Ibngarba",university:"UDUS",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:52,name:"Uyo-ojo Hazel Yusuf",nickname:"Uyo",university:"UNIABUJA",year:"Year 2",gender:"Female",national_position:"None"},
+  {id:15,name:"Auta Isah Joseph",nickname:"Joseph Auta I.G",university:"ABU",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:44,name:"Hafsat Aliyu Iliyasu",nickname:"Hafsy",university:"UNIMAID",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:5,name:"ABDULLAHI ABIOLA AKINGBADE",nickname:"CAPITANO",university:"ABU",year:"Year 5",gender:"Male",national_position:"None"},
+  {id:70,name:"Ojochegbe Uyo Apeh",nickname:"Uyo",university:"UNIABUJA",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:17,name:"Is'haq Badiru",nickname:"Is'haq",university:"ABU",year:"Year 3",gender:"Male",national_position:"None"},
+  {id:65,name:"Toluwanimi Emmanuel Okinbaloye",nickname:"Tolu_Creates",university:"ABU",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:85,name:"Abdulrahman Isah",nickname:"Abu Abdullahi",university:"ABU",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:86,name:"Abdulrahman Odunayo Odukoya",nickname:"Abdulrahman",university:"FUNAAB",year:"Year 5",gender:"Male",national_position:"None"},
+  {id:87,name:"Godstime Okojie",nickname:"GT",university:"UNIBEN",year:"Graduate",gender:"Male",national_position:"None"},
+  {id:88,name:"Nenritmwa Yusuf Kitgakka",nickname:"Nenrit",university:"ABU",year:"Year 5",gender:"Male",national_position:"None"},
+],
+"Bamalli":[
+  {id:75,name:"Zaynab Arike Okesiji",nickname:"Okesiji",university:"ABU",year:"Year 6",gender:"Female",national_position:"None"},
+  {id:29,name:"Uthman Olatunji Jimoh",nickname:"Ouranimaldoctor",university:"UNIBADAN",year:"Year 5",gender:"Male",national_position:"Public Relations Coordinator II"},
+  {id:27,name:"Abdulwahab Muhammad Karumi",nickname:"Karumi",university:"UNIMAID",year:"Year 4",gender:"Male",national_position:"Chairperson, SCOVE IVSA Nigeria"},
+  {id:74,name:"Iruoghene Trust Agiama",nickname:"A.I_Pets",university:"UNIBEN",year:"Graduate",gender:"Male",national_position:"Secretary General, SCOVE"},
+  {id:83,name:"Oluwatimileyin Moyosore Arowolo",nickname:"Deborah",university:"UNILORIN",year:"Year 4",gender:"Female",national_position:"Secretary and Welfare Coordinator, SCAW"},
+  {id:76,name:"Morrison Yangzyee Demshemino",nickname:"Demshemino",university:"ABU",year:"Year 6",gender:"Male",national_position:"National Graphic Designer"},
+  {id:26,name:"Temiloluwa Oluwaseyi Ajamu",nickname:"A.J",university:"ABU",year:"Year 3",gender:"Female",national_position:"Sponsorship Coordinator, SCOVE"},
+  {id:24,name:"Amina Ayedimme Yunusa",nickname:"Amina",university:"ABU",year:"Year 4",gender:"Female",national_position:"None"},
+  {id:23,name:"Chris Amanesi Izumah",nickname:"Chris",university:"ABU",year:"Year 4",gender:"Male",national_position:"None"},
+  {id:67,name:"Karima Suleiman",nickname:"Ameerah",university:"ABU",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:69,name:"Vida Akuben Galadima",nickname:"VIDA",university:"UNIJOS",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:55,name:"Bimbo Barakat Akinyemi",nickname:"Bimbs",university:"ABU",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:59,name:"Uche Joshua Christian",nickname:"Ceejay",university:"UNIABUJA",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:22,name:"Habib Abdullahi",nickname:"Luckyflow",university:"ABU",year:"Year 3",gender:"Male",national_position:"None"},
+  {id:66,name:"Eboh Deborah Paul",nickname:"Eboh",university:"ABU",year:"Year 6",gender:"Female",national_position:"None"},
+  {id:50,name:"Grace Agbanyim",nickname:"AG baby",university:"UNN",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:47,name:"IFECHUKWUDE BRYAN ABUDEI",nickname:"BRYAN",university:"UNN",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:11,name:"Abigail Enegoloyinu PAUL",nickname:"Littlemiss",university:"ABU",year:"Year 5",gender:"Female",national_position:"None"},
+  {id:4,name:"Hassan Taiwo Amidu",nickname:"Abu Imran",university:"ABU",year:"Year 6",gender:"Male",national_position:"None"},
+  {id:13,name:"Nafisah Mustapha",nickname:"Dimple cute",university:"ABU",year:"Year 3",gender:"Female",national_position:"None"},
+  {id:39,name:"Dr Halima Idris Muhammad",nickname:"Sadiya",university:"UNIABUJA",year:"Graduate",gender:"Female",national_position:"BoT Chair"},
+  {id:91,name:"Abdulaziz Rabiu",nickname:"Golden_prince",university:"ABU",year:"Year 5",gender:"Male",national_position:"None"},
+]};
+
+const TEAM_META = {
+  'Queen Amina':{code:'qa',icon:'👑',color:'var(--qa)',desc:'The warrior queen of Zazzau — fierce, brilliant, and pioneering.'},
+  'Sardauna':   {code:'sd',icon:'🦅',color:'var(--sd)',desc:'Named for the great northern statesman — vision and leadership.'},
+  'Ribadu':     {code:'rb',icon:'⚔️',color:'var(--rb)',desc:'Honour, courage, and relentless pursuit of excellence.'},
+  'Bamalli':    {code:'bm',icon:'🏹',color:'var(--bm)',desc:'Precision, unity, and the spirit of Zazzau\'s legacy.'},
+};
+
+const ALL = [];
+Object.entries(GROUPS).forEach(([g,ms])=>ms.forEach(m=>ALL.push({...m,group:g})));
+
+const tc = g=>({'Queen Amina':'qa','Sardauna':'sd','Ribadu':'rb','Bamalli':'bm'}[g]||'qa');
+const norm = s=>(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
+const isExec = m=>{const p=norm(m.national_position||'');return p&&p!=='none'&&p!=='member'&&p!=='none'&&p.length>4;};
+const initials = m=>{const pts=(m.name||'').split(' ').filter(Boolean);return((pts[0]||'')[0]||'').toUpperCase()+((pts[1]||'')[0]||'').toUpperCase();};
+
+function scoreMatch(m,q){
+  const n=norm(m.name),nk=norm(m.nickname||''),qq=norm(q);
+  if(!qq)return 0;
+  if(n===qq||nk===qq)return 100;
+  if(n.startsWith(qq)||nk.startsWith(qq))return 85;
+  if(n.split(' ').some(p=>p.startsWith(qq)))return 70;
+  if(n.includes(qq)||nk.includes(qq))return 50;
+  return 0;
+}
+
+let sugs=[],hiIdx=-1;
+function handleSearch(val){
+  if(val.length<2){hideDrop();if(!val.trim())showIdle();return;}
+  sugs=ALL.map(m=>({m,s:scoreMatch(m,val)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,8).map(x=>x.m);
+  hiIdx=-1;renderDrop(sugs,val);
+}
+function handleKey(e){
+  const d=document.getElementById('sugDrop');
+  if(d.style.display==='none'||!d.style.display)return;
+  if(e.key==='ArrowDown'){hiIdx=Math.min(hiIdx+1,sugs.length-1);hilite();e.preventDefault();}
+  else if(e.key==='ArrowUp'){hiIdx=Math.max(hiIdx-1,0);hilite();e.preventDefault();}
+  else if(e.key==='Enter'&&hiIdx>=0)pick(sugs[hiIdx]);
+  else if(e.key==='Escape')hideDrop();
+}
+function hilite(){document.querySelectorAll('.sug-item').forEach((el,i)=>el.classList.toggle('hi',i===hiIdx));}
+function hideDrop(){const d=document.getElementById('sugDrop');d.style.display='none';}
+
+function renderDrop(results,query){
+  const drop=document.getElementById('sugDrop');
+  if(!results.length){
+    drop.style.display='block';
+    drop.innerHTML=`<div class="no-sug">No delegate found for "${query}"</div>`;
+    return;
+  }
+  drop.style.display='block';
+  drop.innerHTML=results.map(m=>{
+    const code=tc(m.group);
+    return `<div class="sug-item" onclick="pick(ALL.find(x=>x.id===${m.id}))">
+      <div class="sug-av bg-${code}">${initials(m)}</div>
+      <div>
+        <div class="sug-name">${m.name}</div>
+        <div class="sug-meta">${m.university} · ${m.year}${m.nickname?' · "'+m.nickname+'"':''}</div>
+      </div>
+      <div class="sug-badge bg-${code}">${m.group}</div>
+    </div>`;
+  }).join('');
+}
+
+function pick(member){document.getElementById('searchInput').value=member.name;hideDrop();showResult(member);}
+function showIdle(){document.getElementById('stateIdle').style.display='block';document.getElementById('stateResult').style.display='none';}
+
+function buildTeamGrid(){
+  document.getElementById('teamGrid').innerHTML=Object.entries(GROUPS).map(([g,members])=>{
+    const meta=TEAM_META[g],code=tc(g);
+    return `<div class="tcard" onclick="showFullTeam('${g}')">
+      <div class="tcard-top bg-${code}">
+        <div class="tcard-pattern"></div>
+        <div class="tcard-emoji">${meta.icon}</div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-name">${g}</div>
+        <div class="tcard-count"><span class="tcard-pip bg-${code}"></span>${members.length} delegates</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function memberRow(m,youId){
+  const isYou=m.id===youId,code=tc(m.group),exec=isExec(m);
+  return `<div class="ritem${isYou?' you border-'+code:''}">
+    <div class="rav bg-${code}">${initials(m)}</div>
+    <div>
+      <div class="rname">${m.name}</div>
+      <div class="rnick">"${m.nickname}"</div>
+    </div>
+    ${exec?'<span class="exec-star" title="National Executive">⭐</span>':''}
+    ${isYou?`<span class="you-tag bg-${code}">You</span>`:''}
+  </div>`;
+}
+
+function showResult(member){
+  const group=member.group,teammates=GROUPS[group],code=tc(group),meta=TEAM_META[group];
+  const execCount=teammates.filter(isExec).length;
+  const uniCount=[...new Set(teammates.map(m=>m.university))].length;
+  document.getElementById('stateIdle').style.display='none';
+  const res=document.getElementById('stateResult');
+  res.style.display='block';
+  res.innerHTML=`
+    <div class="result-card">
+      <div class="id-band light-${code}">
+        <div class="id-band-top bg-${code}"></div>
+        <div class="id-band-glow bg-${code}"></div>
+        <div class="id-content">
+          <div class="id-eyebrow">Congress Delegate · Zazzau '26</div>
+          <div class="id-name">${member.name}</div>
+          ${member.nickname?`<div class="id-nick">"${member.nickname}"</div>`:''}
+          <div class="id-chips">
+            <div class="id-chip">🎓 ${member.university}</div>
+            <div class="id-chip">📅 ${member.year}</div>
+            <div class="id-chip">${member.gender}</div>
+            ${isExec(member)?`<div class="id-chip exec bg-${code}">⭐ ${member.national_position}</div>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="team-reveal">
+        <div>
+          <div class="tr-sub">Your Congress Team</div>
+          <div class="tr-name color-${code}">${meta.icon} ${group}</div>
+          <div class="tr-desc">${meta.desc}</div>
+        </div>
+        <div class="tr-stats">
+          <div class="tr-stat">
+            <span class="tr-stat-num color-${code}">${teammates.length}</span>
+            <span class="tr-stat-lbl">delegates</span>
+          </div>
+          <div class="tr-stat">
+            <span class="tr-stat-num color-${code}">${execCount}</span>
+            <span class="tr-stat-lbl">executives</span>
+          </div>
+          <div class="tr-stat">
+            <span class="tr-stat-num color-${code}">${uniCount}</span>
+            <span class="tr-stat-lbl">universities</span>
+          </div>
+        </div>
+      </div>
+      <div class="roster">
+        <div class="roster-head">
+          <div class="roster-title">Your Teammates</div>
+          <div class="roster-count">${teammates.length} MEMBERS</div>
+        </div>
+        <div class="roster-grid">${teammates.map(m=>memberRow(m,member.id)).join('')}</div>
+      </div>
+    </div>
+    <div class="back-row"><button class="back-btn" onclick="showIdle();document.getElementById('searchInput').value=''">← Search another name</button></div>`;
+}
+
+function showFullTeam(group){
+  const members=GROUPS[group],code=tc(group),meta=TEAM_META[group];
+  const execCount=members.filter(isExec).length;
+  const uniCount=[...new Set(members.map(m=>m.university))].length;
+  document.getElementById('stateIdle').style.display='none';
+  const res=document.getElementById('stateResult');
+  res.style.display='block';
+  res.innerHTML=`
+    <div class="result-card">
+      <div class="id-band light-${code}">
+        <div class="id-band-top bg-${code}"></div>
+        <div class="id-content">
+          <div class="id-eyebrow">Congress Team · Zazzau '26</div>
+          <div class="id-name">${meta.icon} ${group}</div>
+          <div class="id-nick">${meta.desc}</div>
+          <div class="id-chips" style="margin-top:18px;">
+            <div class="id-chip">👥 ${members.length} delegates</div>
+            ${execCount?`<div class="id-chip exec bg-${code}">⭐ ${execCount} executives</div>`:''}
+            <div class="id-chip">🏫 ${uniCount} universities</div>
+          </div>
+        </div>
+      </div>
+      <div class="roster">
+        <div class="roster-head">
+          <div class="roster-title">All Members</div>
+          <div class="roster-count">${members.length} DELEGATES</div>
+        </div>
+        <div class="roster-grid">${members.map(m=>memberRow(m,-1)).join('')}</div>
+      </div>
+    </div>
+    <div class="back-row"><button class="back-btn" onclick="showIdle();document.getElementById('searchInput').value=''">← Back to teams</button></div>`;
+}
+
+document.addEventListener('click',e=>{if(!e.target.closest('.search-inner'))hideDrop();});
+buildTeamGrid();
+</script>
+</body>
+</html>
